@@ -5,53 +5,40 @@
 #include <sys/sem.h>
 #include <stdlib.h>
 #define KEY 010600
-void create_s(char *N){
-  int val;
-  val = semget(KEY, 1, IPC_CREAT | IPC_EXCL | 0664);
-  if(val==-1){
-    printf("Semaphore not created. Already exists.\n");
+int main(int argc, char *argv[]){
+int sem_id;
+ if (argc==3) {
+   if (!strcmp(argv[1],"-c")) {
+     sem_id=semget(KEY,1,IPC_CREAT | IPC_EXCL | 0600);
+     if (sem_id>=0) {
+       int size=0;
+       sscanf(argv[2],"%d",&size);
+       printf("Semaphore created: %d\n",sem_id);
+       semctl(sem_id,0,SETVAL,size);
+       printf("Value set: %d\n", semctl(sem_id,0,GETVAL));
+     }
+     else {
+	printf("Semaphore already exists\n");
+     }
+   }
+   else
+      printf("improper input\n");
   }
-  else{
-    int n;
-    scanf(N, "%d", &n);
-    semctl(val, 0, SETVAL, n);
-    printf("Semaphore with ID %d and value %s created. \n", val, N);
+ else if (argc==2) {
+    if (!strcmp(argv[1],"-v")) {
+      sem_id=semget(KEY,1,0600);
+      printf("Semaphore value: %d\n",semctl(sem_id,0,GETVAL));
+    }
+    else if (!strcmp(argv[1],"-r")) {
+      sem_id=semget(KEY,1,0600);
+      printf("Semaphore removed: %d\n",semctl(sem_id,0,IPC_RMID));
+    }
+    else
+      printf("Improper input\n");
   }
-}
-
-void remove_s(){
-  int val;
-  val = semget(KEY,0,0);
-  printf("Removed sempahore: %d\n", semctl(val, 0, IPC_RMID));
-}
-void s_val(){
-  int val;
-  val = semget(KEY, 0,0);
-  printf("Semaphore value is: %d \n", semctl(val,0, GETVAL));
-}
-
-int main(int argc, char ** argv){
-  if (argc< 2){
-    printf("Not enough arguments. Failed.\n");
-  }
-  else{
-    if(strcmp(argv[1], "-r")==0){
-      remove_s();
-    }
-    if(strcmp(argv[1], "-v")==0){
-      s_val();
-    }
-    if(strcmp(argv[1],"-c")==0 && !(argc <3)){
-      create_s(argv[2]);
-    }
-    else {
-      printf("Invalid arguments. Failed.\n");
-    }
-  }
+  else
+    printf("Improper input.\n");
   return 0;
+ 
+
 }
-
-
-
-
-
